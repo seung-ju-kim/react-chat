@@ -1,0 +1,12 @@
+// const express = require('express');
+import express from 'express';
+
+const app = express();
+
+app.get('/', (req, res) => {
+  res.send('backend works');
+});
+
+app.listen(3000, () => {
+  console.log('server running');
+});
