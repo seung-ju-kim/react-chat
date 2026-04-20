@@ -1,34 +1,11 @@
-import { useEffect } from 'react'
 import './App.css'
+import './hooks/useChatSocket';
+import { useChatSocket } from './hooks/useChatSocket';
 
 function App() {
-  useEffect(() => { 
-    const socket = new WebSocket('ws://localhost:3000');
-
-    // 연결 성공
-    socket.onopen = () => {
-      console.log('connected to websocket server');
-      // 서버 메시지 받기
-      socket.send('hello from react');
-    };
-
-    // 서버 메시지 받기
-    socket.onmessage = ((event) => {
-      console.log(
-        'message from server:',
-        event.data
-      );
-    });
-
-    socket.onclose = () => {
-      console.log('socket closed');
-    };
-
-    // 컴포넌트 종료 시 정리
-    return () => {
-      socket.close();
-    }
-  }, []);
+  // 커스텀 훅 사용
+  // TODO: URL은 환경변수로 관리하는 게 좋음!
+  useChatSocket('ws://localhost:3000')
 
   return (
     <div>
