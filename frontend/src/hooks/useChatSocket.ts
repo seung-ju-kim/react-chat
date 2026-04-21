@@ -1,4 +1,5 @@
 import { useEffect } from 'react';
+import useChatStore from '../store/useChatStore';
 
 export function useChatSocket(url: string) {
 
@@ -15,11 +16,10 @@ export function useChatSocket(url: string) {
 
         // 서버 메시지 받기
         socket.onmessage = ((event) => {
-            console.log(event);
-            console.log(
-                'message from server:',
-                event.data
-            );
+            console.log('message from server:', event.data);
+            
+            // Zustand store에 메시지 추가
+            useChatStore.getState().addMessage({ id: Date.now().toString(), text: event.data });
         });
 
         // 에러 처리
