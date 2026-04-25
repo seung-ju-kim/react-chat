@@ -32,8 +32,8 @@ export function useChatSocket(
         const socket = new WebSocket(url);
 
         /**
-         * [WHY] socket을 ref에 저장해야 이후에도 접근 가능
-         * (일반 변수는 렌더링 시 초기화 됨)
+         * [WHY] useEffect 바깥의 sendMessage에서도 socket 인스턴스에 접근해야 하므로 ref에 저장
+         * (state로 두면 setState마다 재렌더 + effect 재실행되어 부적합)
          */
         socketRef.current = socket;
 
@@ -110,8 +110,19 @@ export function useChatSocket(
         };
     }, [url]);
 
+    const sendMessage = (msg: string) => {
+        /**
+         * [WHAT] 서버로 메시지 보내는 함수
+         * [WHY] App에서 socketRef에 직접 접근하지 않고 이 함수를 통해 메시지 전송하도록 역할 분리
+         */
+        if (socketRef.current && isConnected) {
+            socketRef.current.send(msg);
+        }
+    };
+
     /**
-     * [WAY] 외부(UI)에서 상태를 사용할 수 있도록 반환
+     * [WHAT] 외부(UI)에서 사용할 상태와 함수 반환
+     * [WHY] 연결 상태 표시와 메시지 전송을 컴포넌트에서 활용하기 위함
      */
-    return { isConnected };
+    return { isConnected, sendMessage };
 }

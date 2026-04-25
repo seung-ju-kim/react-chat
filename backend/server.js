@@ -44,10 +44,13 @@ wss.on('connection', (ws) => {
   클라이언트 메시지 받기
   */
   ws.on('message', (message) => {
-    console.log('client says:', message.toString());
+
+    const messageStr = message.toString();
+    
+    console.log('client says:', messageStr);
 
     // 응답 보내기
-    ws.send('server received your message');
+    ws.send(messageStr);
   });
 
   ws.on('close', () => {
