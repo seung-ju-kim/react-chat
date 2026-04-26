@@ -1,7 +1,7 @@
 // const express = require('express');
 import express from 'express';
 import http from 'http';
-import { WebSocketServer } from 'ws';
+import { WebSocketServer, WebSocket } from 'ws';
 
 const app = express();
 
@@ -38,7 +38,7 @@ wss.on('connection', (ws) => {
   console.log('client connected');
 
   // 접속 즉시 서버가 메시지 보냄
-  ws.send('hello from server');
+  // ws.send('hello from server');
 
   /* 
   클라이언트 메시지 받기
@@ -46,11 +46,19 @@ wss.on('connection', (ws) => {
   ws.on('message', (message) => {
 
     const messageStr = message.toString();
-    
     console.log('client says:', messageStr);
 
+    wss.clients.forEach((client) => {
+      console.log('client:', client);
+      console.log('client readyState:', client.readyState);
+      if (client.readyState === WebSocket.OPEN) {
+        // client.send(`Client says: ${messageStr}`);
+        client.send(messageStr);
+      }
+    });
+
     // 응답 보내기
-    ws.send(messageStr);
+    // ws.send(messageStr);
   });
 
   ws.on('close', () => {

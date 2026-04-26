@@ -1,12 +1,5 @@
 import { create } from "zustand";
-
-/**
- * 채팅 메시지 모델
- */
-type ChatMessage = {
-    id: string;
-    text: string;
-};
+import type { ChatMessage } from "../types/chat";
 
 /**
  * 채팅 전역 상태(Store)
@@ -21,20 +14,19 @@ type ChatMessage = {
 type ChatStore = {
     messages: ChatMessage[];
 
-    addMessage: (message: ChatMessage) => void;
-
-    // removeMessage: (id: string) => void;
+    addMessage: (msg: ChatMessage) => void;
+    clearMessages: () => void;
 };
 
 const useChatStore = create<ChatStore>((set) => ({
     // 초기 상태
     messages: [],
 
-    // 메시지 추가
-    addMessage: (message) => set((state) => ({ messages: [...state.messages, message] })),
+    // [WHY] 메시지 추가 시 불변성 유지
+    addMessage: (msg) => set((state) => ({ messages: [...state.messages, msg] })),
 
-    // id 기준 메시지 제거
-    // removeMessage: (id) => set((state) => ({ messages: state.messages.filter((msg) => msg.id !== id) })),
+    // 메시지 전체 삭제
+    clearMessages: () => set({ messages: [] }),
 
 }));
 

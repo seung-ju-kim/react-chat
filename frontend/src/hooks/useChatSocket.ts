@@ -53,7 +53,7 @@ export function useChatSocket(
             console.log('connected to websocket server');
 
             // 서버에 첫 메시지 보내기 (테스트용)
-            socket.send('hello from react');
+            // socket.send('hello from react');
         };
 
         /**
@@ -110,7 +110,14 @@ export function useChatSocket(
         };
     }, [url]);
 
+
+    /**
+     * [WHAT] 메시지 전송 함수
+     * [WHY] 외부(UI)에서 socket 직접 접근하지 않게 하기 위함
+     */
     const sendMessage = (msg: string) => {
+
+        console.log('sendMessage called with:', msg);
         /**
          * [WHAT] 서버로 메시지 보내는 함수
          * [WHY] App에서 socketRef에 직접 접근하지 않고 이 함수를 통해 메시지 전송하도록 역할 분리
@@ -120,9 +127,5 @@ export function useChatSocket(
         }
     };
 
-    /**
-     * [WHAT] 외부(UI)에서 사용할 상태와 함수 반환
-     * [WHY] 연결 상태 표시와 메시지 전송을 컴포넌트에서 활용하기 위함
-     */
     return { isConnected, sendMessage };
 }
