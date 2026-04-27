@@ -88,3 +88,10 @@ coverage
 
 # Finder metadata file
 .DS_Store
+
+
+# =========================
+# Docs (local only)
+# =========================
+
+docs/
