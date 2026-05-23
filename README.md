@@ -34,12 +34,25 @@ Vite dev 서버가 뜨면 브라우저에서 접속해 채팅을 확인한다.
 ```
 frontend/src
 ├── App.tsx
-├── hooks/useChatSocket.ts   # WebSocket 연결 커스텀 훅
-├── pages/Test.tsx           # useState/useRef/변수 비교 테스트 페이지
-└── store/                   # Zustand 스토어
+├── components/
+│   └── Chat.tsx              # 채팅 UI + 입력/전송 처리
+├── hooks/
+│   └── useChatSocket.ts      # WebSocket 연결 커스텀 훅 (송수신 콜백 위임)
+├── store/
+│   └── useChatStore.ts       # Zustand 채팅 메시지 스토어
+├── types/
+│   └── chat.ts               # WireMessage(통신용) / ChatMessage(화면용)
+└── pages/Test.tsx            # useState/useRef/변수 비교 테스트 페이지
 backend
-└── server.js                # Express + ws 서버
+└── server.js                 # Express + ws 서버 (메시지 broadcast)
 ```
+
+## 동작 개요
+
+- 클라가 보낸 메시지는 서버가 **내용을 해석하지 않고 모든 클라이언트에 broadcast**.
+- 본인 메시지도 서버 echo로 돌아와 단일 경로로 처리 (낙관적 업데이트 불필요).
+- 탭별 식별을 위해 `myId`를 `sessionStorage`에 저장 → 두 탭으로 송수신 테스트 가능.
+- 통신 포맷(`WireMessage`)과 화면 모델(`ChatMessage`)을 타입으로 분리.
 
 ## 스크립트
 

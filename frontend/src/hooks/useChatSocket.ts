@@ -19,6 +19,17 @@ export function useChatSocket(
      */
     const socketRef = useRef<WebSocket | null>(null);
 
+    /**
+     * [WHAT] onMessage 콜백의 최신 참조
+     * [WHY] effect는 url에만 의존(소켓을 매번 재연결하면 안 됨).
+     *       하지만 콜백은 부모 렌더마다 새로 만들어질 수 있으니,
+     *       ref에 담아 socket.onmessage가 항상 최신 값을 호출하도록.
+     */
+    const onMessageRef = useRef(onMessage);
+    useEffect(() => {
+        onMessageRef.current = onMessage;
+    }, [onMessage]);
+
     useEffect(() => {
 
         /**
@@ -70,7 +81,7 @@ export function useChatSocket(
              *       App으로 이벤트를 전달하여 역할을 분리하기 위함
              * [HOW] 전달받은 onMessage 콜백 실행
              */
-            onMessage(event.data);
+            onMessageRef.current(event.data);
         });
 
         /**
@@ -120,10 +131,12 @@ export function useChatSocket(
         console.log('sendMessage called with:', msg);
         /**
          * [WHAT] 서버로 메시지 보내는 함수
-         * [WHY] App에서 socketRef에 직접 접근하지 않고 이 함수를 통해 메시지 전송하도록 역할 분리
+         * [WHY] isConnected(state)는 한 박자 늦을 수 있어 클로저로 막히는 경우가 있음.
+         *       소켓의 실제 상태인 readyState를 직접 보는 게 가장 정확함.
          */
-        if (socketRef.current && isConnected) {
-            socketRef.current.send(msg);
+        const socket = socketRef.current;
+        if (socket && socket.readyState === WebSocket.OPEN) {
+            socket.send(msg);
         }
     };
 
