@@ -1,10 +1,9 @@
-
 import { useEffect, useMemo, useRef, useState } from 'react';
-import '../hooks/useChatSocket';
 import { useChatSocket } from '../hooks/useChatSocket';
-
 import useChatStore from '../store/useChatStore';
+import useUserStore from '../store/useUserStore';
 import type { WireMessage } from '../types/chat';
+
 export default function Chat() {
 
     /**
@@ -20,22 +19,28 @@ export default function Chat() {
         }
         return id;
     }, []);
-    const myUsername = '나'; // 2단계(로그인)에서 입력값으로 교체 예정
 
-    console.log('crypto', myId)
+    /**
+     * [WHAT] Google 로그인으로 받은 실제 사용자 이름
+     * [WHY] WireMessage에 담겨 상대방 화면에 발신자 이름으로 표시됨
+     *       useUserStore에서 꺼내므로 로그인 상태와 항상 동기화됨
+     */
+    const myUsername = useUserStore((state) => state.user?.name ?? '나');
+
     /**
      * [WHAT] 입력값 상태
      * [WHY] 사용자가 입력한 메시지를 관리하기 위해
      */
     const [inputValue, setInputValue] = useState('');
+
     /**
      * [WHAT] 채팅 메시지 목록
      */
     const messages = useChatStore((state) => state.messages);
+
     /**
      * [WHAT] 메시지 추가 action
      * [WHY] 상태 변경은 Store에서만 일어나도록 하기 위함
-     * [WHEN] 컴포넌트 렌더 시 초기화
      */
     const addMessage = useChatStore((state) => state.addMessage);
 
@@ -65,7 +70,6 @@ export default function Chat() {
              *       id는 발신측 timestamp + userId로 — 모든 탭에서 동일한 id.
              */
             const data: WireMessage = JSON.parse(msg);
-            console.log('Received message:', data);
             addMessage({
                 id: `${data.timestamp}-${data.userId}`,
                 text: data.text,
@@ -77,16 +81,13 @@ export default function Chat() {
 
     /**
      * [WHAT] 메시지 전송
+     * [HOW] WireMessage 봉투에 담아 서버로 전송.
+     *       서버는 broadcast만 하므로, 본인 메시지도 곧바로 echo로 돌아옴
+     *       → 받는 쪽에서 sender 판단까지 일원화됨 (낙관적 업데이트 불필요).
      */
     const handleSendMessage = () => {
-
         if (!inputValue.trim()) return; // 빈 메시지 전송 방지
 
-        /**
-         * [HOW] WireMessage 봉투에 담아 서버로 전송.
-         *       서버는 broadcast만 하므로, 본인 메시지도 곧바로 echo로 돌아옴
-         *       → 받는 쪽에서 sender 판단까지 일원화됨 (낙관적 업데이트 불필요).
-         */
         const wire: WireMessage = {
             userId: myId,
             username: myUsername,
@@ -94,8 +95,7 @@ export default function Chat() {
             timestamp: Date.now(),
         };
         sendMessage(JSON.stringify(wire));
-
-        setInputValue(''); // 입력창 초기화
+        setInputValue('');
     };
 
     return (
@@ -112,15 +112,11 @@ export default function Chat() {
                 type="text"
                 value={inputValue}
                 onChange={(e) => setInputValue(e.target.value)}
-                onKeyDown={((e) => {
-                    console.log(e.nativeEvent.isComposing)
-                    // [WHAT] IME 입력 중인 경우 Enter 키 무시
+                onKeyDown={(e) => {
+                    // IME 입력 중(한글 조합 등)인 경우 Enter 키 무시
                     if (e.nativeEvent.isComposing) return;
-
-                    if (e.key === 'Enter') {
-                        handleSendMessage();
-                    }
-                })}
+                    if (e.key === 'Enter') handleSendMessage();
+                }}
                 placeholder="메시지를 입력하세요"
             />
             <button onClick={handleSendMessage} disabled={!isConnected}>

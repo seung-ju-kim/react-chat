@@ -1,64 +1,28 @@
-// const express = require('express');
-import express from 'express';
 import http from 'http';
 import { WebSocketServer, WebSocket } from 'ws';
+import app from './app.js';
 
-const app = express();
-
-/*
-왜 http 서버 따로 만드냐?
-
-Express 앱(app)만으로는
-WebSocket 붙이기 어려움
-
-HTTP 서버 위에
-WebSocket 서버를 붙임
-*/
+/**
+ * Express app(app)만으로는 WebSocket을 붙일 수 없음.
+ * http 서버를 별도로 만들고, 그 위에 WebSocket 서버를 함께 올리는 구조.
+ * → HTTP 요청(REST API)과 WebSocket 연결을 같은 포트(3000)에서 처리 가능.
+ */
 const server = http.createServer(app);
 
-/* 
-WebSocket 서버 생성
-*/
-const wss = new WebSocketServer({
-  server
-});
+const wss = new WebSocketServer({ server });
 
-/*
-HTTP 테스트용
-브라우저에서 localhost:3000 들어가면 확인 가능
-*/
-app.get('/', (req, res) => {
-  res.send('backend works');
-});
-
-/* 
-클라이언트 연결 감지
-*/
 wss.on('connection', (ws) => {
   console.log('client connected');
 
-  // 접속 즉시 서버가 메시지 보냄
-  // ws.send('hello from server');
-
-  /* 
-  클라이언트 메시지 받기
-  */
   ws.on('message', (message) => {
-
     const messageStr = message.toString();
-    console.log('client says:', messageStr);
 
+    // 받은 메시지를 내용 해석 없이 접속 중인 모든 클라이언트에 broadcast
     wss.clients.forEach((client) => {
-      console.log('client:', client);
-      console.log('client readyState:', client.readyState);
       if (client.readyState === WebSocket.OPEN) {
-        // client.send(`Client says: ${messageStr}`);
         client.send(messageStr);
       }
     });
-
-    // 응답 보내기
-    // ws.send(messageStr);
   });
 
   ws.on('close', () => {
@@ -66,12 +30,6 @@ wss.on('connection', (ws) => {
   });
 });
 
-/* 
-중요!
-app.listen 아님
-
-server.listen.
-*/
 server.listen(3000, () => {
   console.log('server running on 3000');
 });
